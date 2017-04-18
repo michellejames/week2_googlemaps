@@ -1,0 +1,117 @@
+<!DOCTYPE html>
+<html>
+  <head>
+    <title>Simple Map</title>
+    <meta name="viewport" content="initial-scale=1.0">
+    <meta charset="utf-8">
+
+    <style>
+      /* Always set the map height explicitly to define the size of the div
+       * element that contains the map. */
+      #map {
+        height: 70%;
+        width: 70%;
+        position: absolute;
+        top: 50%;
+        left: 50%;
+        transform: translate(-50%, -50%);
+      }
+
+      form {
+        z-index: 2;
+        display: flex;
+        justify-content: center;
+        padding-top: 20px;
+      }
+      /* Optional: Makes the sample page fill the window. */
+      html, body {
+        height: 100%;
+        margin: 0;
+        padding: 0;
+      }
+    </style>
+
+  </head>
+
+  <body>
+
+    <form>
+      <label for="">Query: </label>
+      <input class="searchTextField" type="text" placeholder="Start typing here">
+      <button class="submit-button" type='submit'>Search</button>
+    </form>
+
+    <div id="map"></div>
+
+    <script>
+
+      var map;
+      var submitButton = document.querySelector("form");
+      var request;
+      var service;
+
+      function initMap () {
+        var ccLatlng = new google.maps.LatLng ( 49.443019, 11.075886 );
+        map = new google.maps.Map ( document.getElementById ("map"), {
+          center: ccLatlng,
+          zoom: 14,
+        });
+
+        var infowindow = new google.maps.InfoWindow ({
+          content: "<h2>HOME SWEEET HOME</h2><p>Tafelfeldstrasse 13</p><p>90443 Nürnberg</p>"
+        });
+
+        var marker = new google.maps.Marker ({
+          position: ccLatlng,
+          map: map
+        });
+
+        marker.addListener ( "click", function () {
+          infowindow.open ( map, marker );
+        });
+
+        submitButton.addEventListener ( "submit", function ( e ) {
+            e.preventDefault();
+            request.query = document.querySelector ( "input" ).value;
+            service.textSearch ( request, callback );
+        });
+
+        request = {
+          location: ccLatlng,
+          radius: "300",
+          query: ccLatlng,
+        };
+
+        service = new google.maps.places.PlacesService ( map );
+        service.textSearch ( request, callback );
+
+        function callback ( results, status ) {
+          if ( status == google.maps.places.PlacesServiceStatus.OK ) {
+            for ( var i = 0; i < results.length; i++ ) {
+              createMarker ( results[i] );
+            }
+          }
+        }
+
+        function createMarker ( result ) {
+          var infoWindow = new google.maps.InfoWindow ({
+            content: result.name,
+          });
+
+          var marker = new google.maps.Marker ({
+            map: map,
+            position: result.geometry.location,
+          });
+
+          marker.addListener ("click", function () {
+            infoWindow.open ( map, marker )
+          });
+        }
+      }
+
+    </script>
+
+    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMFCEnANu0HCvQe2SCwHCVre7yzWFv7ag&libraries=places&callback=initMap"
+    async defer></script>
+  </body>
+</html>
