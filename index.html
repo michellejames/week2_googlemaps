@@ -1,33 +1,43 @@
 <!DOCTYPE html>
 <html>
+
   <head>
-    <title>Simple Map</title>
+    <title>NYT API Archiv</title>
     <meta name="viewport" content="initial-scale=1.0">
     <meta charset="utf-8">
-
+    <link href="https://fonts.googleapis.com/css?family=Open+Sans|Raleway" rel="stylesheet">
     <style>
-      /* Always set the map height explicitly to define the size of the div
-       * element that contains the map. */
-      #map {
-        height: 70%;
-        width: 70%;
-        position: absolute;
-        top: 50%;
-        left: 50%;
-        transform: translate(-50%, -50%);
+      html, body {
+        height: 100%;
+        margin-left: 20px;
+        padding: 0;
+        font-family: 'Raleway', sans-serif;
+      }
+
+      .nyt_logo{
+        width: 200px;
+        margin-top: 20px;
       }
 
       form {
         z-index: 2;
         display: flex;
-        justify-content: center;
-        padding-top: 20px;
+        padding: 20px 0;
       }
-      /* Optional: Makes the sample page fill the window. */
-      html, body {
-        height: 100%;
-        margin: 0;
-        padding: 0;
+
+      input {
+        font-size: 1.2em;
+        margin-right: 15px;
+      }
+
+      .headline {
+        font-size: 1.5em;
+        color: red;
+        font-family: 'Open Sans', sans-serif;
+      }
+
+      .date {
+        margin-bottom: 20px;
       }
     </style>
 
@@ -35,83 +45,76 @@
 
   <body>
 
+    <img class="nyt_logo" src="assets/img/nyt_logo.jpg" alt="New York Times Logo">
     <form>
-      <label for="">Query: </label>
-      <input class="searchTextField" type="text" placeholder="Start typing here">
-      <button class="submit-button" type='submit'>Search</button>
+          <input id="query" placeholder="Start typing here...">
+          <button type="button">Search NYT Archiv</button>
     </form>
 
-    <div id="map"></div>
-
+    <script src="https://code.jquery.com/jquery-3.2.1.min.js" integrity="sha256-hwg4gsxgFZhOsEEamdOYGBf13FyQuiTwlAQgxVSNgt4=" crossorigin="anonymous"></script>
+    
     <script>
 
-      var map;
-      var submitButton = document.querySelector("form");
-      var request;
-      var service;
+      var nytFunction = (function() {
 
-      function initMap () {
-        var ccLatlng = new google.maps.LatLng ( 49.443019, 11.075886 );
-        map = new google.maps.Map ( document.getElementById ("map"), {
-          center: ccLatlng,
-          zoom: 14,
-        });
+        function getResults (result) {
 
-        var infowindow = new google.maps.InfoWindow ({
-          content: "<h2>HOME SWEEET HOME</h2><p>Tafelfeldstrasse 13</p><p>90443 Nürnberg</p>"
-        });
+          var apiResults = result.response.docs;
+          console.log(result);
 
-        var marker = new google.maps.Marker ({
-          position: ccLatlng,
-          map: map
-        });
+          for (var i = apiResults.length - 1; i >= 0; i--) {
+            var headline = document.createElement('a');
+            $(headline).html(apiResults[i].headline.main).attr("href", apiResults[i].web_url).attr("target", "_blank").addClass("headline");
 
-        marker.addListener ( "click", function () {
-          infowindow.open ( map, marker );
-        });
+            var leadParagraph = document.createElement("h3");
+            $(leadParagraph).html(apiResults[i].lead_paragraph).addClass("lead-para");
 
-        submitButton.addEventListener ( "submit", function ( e ) {
-            e.preventDefault();
-            request.query = document.querySelector ( "input" ).value;
-            service.textSearch ( request, callback );
-        });
+            var shortDate = apiResults[i].pub_date;
+            shortDate.split();
 
-        request = {
-          location: ccLatlng,
-          radius: "300",
-          query: ccLatlng,
-        };
-
-        service = new google.maps.places.PlacesService ( map );
-        service.textSearch ( request, callback );
-
-        function callback ( results, status ) {
-          if ( status == google.maps.places.PlacesServiceStatus.OK ) {
-            for ( var i = 0; i < results.length; i++ ) {
-              createMarker ( results[i] );
+            var modifyDate = "";
+            for (var j = 0; j < 10; j++) {
+             modifyDate +=shortDate[j];
             }
+            
+            var date = document.createElement("p");
+            $(date).html("<p>" + "Published on: " + modifyDate + "</p>").addClass("date");
+
+            document.body.appendChild(headline);
+            document.body.appendChild(leadParagraph);
+            document.body.appendChild(date);
           }
         }
+        // NYT API Data Input
+        var url = "https://api.nytimes.com/svc/search/v2/articlesearch.json";
 
-        function createMarker ( result ) {
-          var infoWindow = new google.maps.InfoWindow ({
-            content: result.name,
-          });
+        url += "?" + $.param({
+          "api-key": "77f633d40a6b4136951238c1438e5db9",
+          "q": $("#query").val(),
+          "sort": "newest",
+          "hl": "true"
+        });
 
-          var marker = new google.maps.Marker ({
-            map: map,
-            position: result.geometry.location,
-          });
+        $.ajax({
+          url: url,
+          method: "GET",
+        }).done(function(result) {
+          console.log(result);
+          getResults(result);
+        }).fail(function(err) {
+          throw err;
+          console.log("Search results where not able to populate.")
+        });
 
-          marker.addListener ("click", function () {
-            infoWindow.open ( map, marker )
-          });
-        }
-      }
+      });
+
+      nytFunction();
+
+      $("form").on("submit", function (e) {
+        e.preventDefault();
+        nytFunction(); 
+      });
 
     </script>
-
-    <script src="https://maps.googleapis.com/maps/api/js?key=AIzaSyDMFCEnANu0HCvQe2SCwHCVre7yzWFv7ag&libraries=places&callback=initMap"
-    async defer></script>
   </body>
 </html>
