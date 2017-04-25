@@ -110,9 +110,23 @@
 
       nytFunction();
 
+      var deleteResults = function () {
+
+        var $headline = $(".headline");
+        var $leadPara = $(".lead-para");
+        var $date = $(".date");
+
+        for (var i = 0; i < $headline.length; i++) {
+          $headline[i].parentNode.removeChild($headline[i]);
+          $leadPara[i].parentNode.removeChild($leadPara[i]);
+          $date[i].parentNode.removeChild($date[i]);
+        }
+      };
+
       $("form").on("submit", function (e) {
         e.preventDefault();
-        nytFunction(); 
+        deleteResults();
+        nytFunction();
       });
 
     </script>
